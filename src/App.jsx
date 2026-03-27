@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import {
   Users, Settings, Clock, Download, X, Monitor, Music,
   Gamepad2, BookOpen, Coffee, Camera, LogOut, BarChart3,
-  Sparkles, Info, CalendarDays, TrendingUp, Trash2
+  Info, CalendarDays, TrendingUp, Trash2
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════
@@ -29,7 +29,7 @@ const GlobalCSS = () => (
 /* ═══════════════════════════════════════════════
    설정 및 상수
    ═══════════════════════════════════════════════ */
-const APP_VERSION = "v6-3-2 Navy+Sky";
+const APP_VERSION = "v7.0";
 
 const ROOM_DEFS = [
   { id:'dvd1',    name:'DVD1',   mixed:false, multi:false, waitable:true,  iconType:'tv' },
@@ -132,29 +132,6 @@ async function dbLoadSetting(key) {
 }
 
 /* ═══════════════════════════════════════════════
-   Anthropic API (키 불필요)
-   ═══════════════════════════════════════════════ */
-async function callClaude(prompt, systemPrompt) {
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        system: systemPrompt || '',
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-    const data = await res.json();
-    return (data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n') || null;
-  } catch(e) {
-    console.error('Claude API error:',e);
-    return null;
-  }
-}
-
-/* ═══════════════════════════════════════════════
    RoomCard 컴포넌트
    ═══════════════════════════════════════════════ */
 function RoomCard({room, onClick, onEarlyCheckout, isAdmin}) {
@@ -232,23 +209,9 @@ function RoomCard({room, onClick, onEarlyCheckout, isAdmin}) {
    ═══════════════════════════════════════════════ */
 function RegistrationModal({room, onClose, onSubmit, showToast}) {
   const [form, setForm] = useState({name:'', maleCount:'', femaleCount:'', categoryCounts:{'초등':'','중등':'','고등':'','대학':'','일반':''}});
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiTip, setAiTip] = useState('');
 
   const gT = parseInt(form.maleCount||0) + parseInt(form.femaleCount||0);
   const cT = Object.values(form.categoryCounts).reduce((a,b)=>a+parseInt(b||0),0);
-
-  const getAI = async () => {
-    if (cT===0) return showToast('인원을 먼저 입력해 주세요.','error');
-    setAiLoading(true);
-    const cats = Object.entries(form.categoryCounts).filter(([,v])=>parseInt(v)>0).map(([k])=>k).join(', ');
-    const res = await callClaude(
-      `활동실 [${room.name}]을 이용하려는 [${cats}] 학생들에게 줄 3가지 창의적인 활동 추천 리스트를 한국어로 짧게 작성해줘.`,
-      '청소년 활동 전문가. 간결하게 답변.'
-    );
-    setAiTip(res || 'AI 추천을 불러올 수 없습니다.');
-    setAiLoading(false);
-  };
 
   const icon = ICON_MAP[room.iconType] || <Monitor size={12}/>;
 
@@ -260,17 +223,6 @@ function RegistrationModal({room, onClose, onSubmit, showToast}) {
           <button onClick={onClose} className="p-1 hover:bg-sky-200 rounded-full text-sky-600"><X size={18}/></button>
         </div>
         <div className="p-4 space-y-3">
-          {/* AI 추천 */}
-          <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-2.5 rounded-lg border border-sky-100 space-y-1.5">
-            <div className="flex justify-between items-center">
-              <span className="font-black text-sky-600 flex items-center gap-1" style={{fontSize:11}}><Sparkles size={12}/> AI 활동추천</span>
-              <button onClick={getAI} disabled={aiLoading} className="text-white px-3 py-1 rounded-full font-bold shadow-sm bg-sky-500 hover:bg-sky-600" style={{fontSize:10}}>
-                {aiLoading ? <span className="anim-spin inline-block">⏳</span> : '추천받기'}
-              </button>
-            </div>
-            {aiTip && <div className="text-slate-600 leading-relaxed whitespace-pre-wrap anim-fade" style={{fontSize:9}}>{aiTip}</div>}
-          </div>
-
           {/* 이름 */}
           <div className="space-y-1">
             <label className="block font-black text-slate-600 ml-1" style={{fontSize:12}}>대표자 / 팀명</label>
@@ -318,7 +270,7 @@ function RegistrationModal({room, onClose, onSubmit, showToast}) {
 
           <button disabled={!form.name||gT<=0||gT!==cT} onClick={()=>onSubmit(form)}
             className="w-full py-3 hover:opacity-90 disabled:bg-slate-300 text-white rounded-xl font-black shadow-md transition-all active:scale-95"
-            style={{fontSize:13,background:(!form.name||gT<=0||gT!==cT)?undefined:'#38bdf8'}}>
+            style={{fontSize:13,background:(!form.name||gT<=0||gT!==cT)?undefined:'#0ea5e9'}}>
             {gT<=0 ? '인원을 입력하세요' : gT!==cT ? '성별·교급 합계 불일치' : '신청 완료'}
           </button>
         </div>
@@ -334,8 +286,6 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
   const [tab, setTab] = useState('status');
   const [newPw, setNewPw] = useState('');
   const [curPw, setCurPw] = useState('');
-  const [aiReport, setAiReport] = useState('');
-  const [aiLoading, setAiLoading] = useState(false);
   const [selMonth, setSelMonth] = useState(`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}`);
 
   const changeMonth = useCallback((dir)=>{
@@ -365,19 +315,10 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
 
   const downloadCSV = ()=>{
     if(!filtered.length) return showToast('데이터 없음','error');
-    const h='\uFEFF날짜,시간대,활동실,성별,교급,구분\n';
-    const rows=filtered.map(l=>`${l.date},${l.time}시,${l.room},${l.gender},${l.category},${l.type}`).join('\n');
+    const h='\uFEFF날짜,시간대,활동실,대표자,성별,교급,구분\n';
+    const rows=filtered.map(l=>`${l.date},${l.time}시,${l.room},${l.name||''},${l.gender},${l.category},${l.type}`).join('\n');
     const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h+rows],{type:'text/csv;charset=utf-8;'}));
     a.download=`고령_통계_${selMonth}.csv`;a.click();
-  };
-
-  const genReport = async ()=>{
-    if(!filtered.length) return showToast('데이터 없음','error');
-    setAiLoading(true);
-    const summary = JSON.stringify({total:filtered.length,gender:stats.gender,type:stats.type,peakHour:stats.hourly.indexOf(Math.max(...stats.hourly))});
-    const res = await callClaude(`이 ${selMonth} 데이터를 운영 관리 리포트로 분석해줘: ${summary}`, '데이터 분석 전문가. 한국어로 간결하게.');
-    setAiReport(res||'리포트 생성 실패');
-    setAiLoading(false);
   };
 
   const resetStats = ()=>{
@@ -479,55 +420,43 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
 
             <div className="grid grid-cols-4 gap-2 shrink-0">
               {[
-                {label:'총 이용자',val:`${filtered.length}명`,color:'navy'},
+                {label:'총 이용자',val:`${filtered.length}명`,color:'indigo'},
                 {label:'남 / 여',val:`${stats.gender.남} / ${stats.gender.여}`,color:'slate'},
                 {label:'주중 / 주말',val:`${stats.type.주중} / ${stats.type.주말}`,color:'slate'},
                 {label:'피크 시간',val:`${stats.hourly.indexOf(Math.max(...stats.hourly))}시`,color:'amber'},
               ].map((c,i)=>(
                 <div key={i} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
                   <span className="font-black text-slate-400 mb-1" style={{fontSize:10}}>{c.label}</span>
-                  <span className={`font-black ${c.color==='navy'?'text-sky-600':c.color==='amber'?'text-amber-600':'text-slate-700'}`} style={{fontSize:c.color==='navy'?24:13}}>{c.val}</span>
+                  <span className={`font-black ${c.color==='indigo'?'text-sky-600':c.color==='amber'?'text-amber-600':'text-slate-700'}`} style={{fontSize:c.color==='indigo'?24:13}}>{c.val}</span>
                 </div>
               ))}
             </div>
 
-            {/* AI 리포트 */}
-            <div className="p-2.5 px-4 rounded-xl flex justify-between items-center shadow-lg shrink-0 bg-sky-50">
-              <div className="flex items-center gap-2">
-                <Sparkles size={16} className="text-sky-600"/>
-                <span className="font-black text-sky-800" style={{fontSize:12}}>AI 운영 리포트 ({selMonthLabel})</span>
-                {aiReport && <div className="ml-4 text-sky-600 opacity-90 truncate border-l border-sky-200 pl-4" style={{fontSize:9,maxWidth:400}}>{aiReport.slice(0,100)}...</div>}
-              </div>
-              <button onClick={genReport} disabled={aiLoading} className="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1 rounded-full font-black border border-sky-300 flex items-center gap-1.5 transition-all shadow-sm" style={{fontSize:10}}>
-                {aiLoading ? <span className="anim-spin inline-block">⏳</span> : '✨ 생성'}
-              </button>
-            </div>
-
             {/* 시설별 테이블 */}
             <div className="flex-grow bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col shadow-sm">
-              <div className="bg-slate-50 p-1.5 px-3 border-b font-black text-slate-600 flex items-center gap-2 shrink-0" style={{fontSize:9}}>
-                <CalendarDays size={12} className="text-sky-500"/> 시설별 상세 분석
+              <div className="bg-slate-50 p-2 px-3 border-b font-black text-slate-600 flex items-center gap-2 shrink-0" style={{fontSize:12}}>
+                <CalendarDays size={14} className="text-sky-500"/> 시설별 상세 분석
               </div>
               <div className="flex-grow overflow-y-auto scrollbar-thin">
-                <table className="w-full text-left" style={{fontSize:9,tableLayout:'fixed'}}>
-                  <thead className="bg-slate-50 text-slate-400 sticky top-0 font-black border-b z-10">
+                <table className="w-full text-left" style={{fontSize:12,tableLayout:'fixed'}}>
+                  <thead className="bg-slate-50 text-slate-500 sticky top-0 font-black border-b z-10">
                     <tr>
-                      <th className="p-2 border-r" style={{width:'15%'}}>시설</th>
+                      <th className="p-2 px-3 border-r" style={{width:'14%'}}>시설</th>
                       <th className="p-2 border-r text-center" style={{width:'10%'}}>이용</th>
-                      <th className="p-2 border-r text-center" style={{width:'15%'}}>남/여</th>
-                      <th className="p-2 border-r text-center" style={{width:'15%'}}>중/말</th>
-                      <th className="p-2 text-center" style={{width:'45%'}}>교급</th>
+                      <th className="p-2 border-r text-center" style={{width:'14%'}}>남/여</th>
+                      <th className="p-2 border-r text-center" style={{width:'14%'}}>주중/말</th>
+                      <th className="p-2 text-center" style={{width:'48%'}}>교급별 인원</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y text-slate-700 font-bold">
                     {DISPLAY_ORDER.map(id=>{const r=ROOM_DEFS.find(x=>x.id===id);if(!r)return null;const d=stats.roomDetails[r.name];if(!d)return null;return(
-                      <tr key={r.id} className="hover:bg-blue-50/40 transition-colors" style={{height:32}}>
-                        <td className="p-1 px-3 font-black text-slate-800 border-r">{r.name}</td>
-                        <td className="p-1 text-center font-black border-r bg-slate-50/50">{d.total}</td>
-                        <td className="p-1 text-center border-r"><span className="text-blue-600">{d.male}</span>/<span className="text-pink-600">{d.female}</span></td>
-                        <td className="p-1 text-center border-r font-medium text-slate-500">{d.weekday}/{d.weekend}</td>
-                        <td className="p-1"><div className="flex gap-1 justify-center flex-wrap">
-                          {CATEGORIES.map(c=><span key={c} className={`px-1.5 rounded font-black ${d.cats[c]>0?'bg-sky-400 text-white shadow-sm':'bg-slate-100 text-slate-300'}`} style={{fontSize:8}}>{c[0]}:{d.cats[c]}</span>)}
+                      <tr key={r.id} className="hover:bg-sky-50/40 transition-colors" style={{height:36}}>
+                        <td className="p-1.5 px-3 font-black text-slate-800 border-r">{r.name}</td>
+                        <td className="p-1.5 text-center font-black border-r bg-slate-50/50">{d.total}</td>
+                        <td className="p-1.5 text-center border-r"><span className="text-blue-600">{d.male}</span>/<span className="text-pink-600">{d.female}</span></td>
+                        <td className="p-1.5 text-center border-r text-slate-500">{d.weekday}/{d.weekend}</td>
+                        <td className="p-1.5"><div className="flex gap-1.5 justify-center flex-wrap">
+                          {CATEGORIES.map(c=><span key={c} className={`px-2 py-0.5 rounded font-black ${d.cats[c]>0?'bg-sky-500 text-white shadow-sm':'bg-slate-100 text-slate-400'}`} style={{fontSize:11}}>{c[0]}:{d.cats[c]}</span>)}
                         </div></td>
                       </tr>
                     );})}
@@ -537,25 +466,25 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
             </div>
 
             {/* 시간대 히트맵 + 일별 */}
-            <div className="grid grid-cols-2 gap-2 shrink-0 pb-1" style={{height:112}}>
+            <div className="grid grid-cols-2 gap-2 shrink-0 pb-1" style={{height:120}}>
               <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                <span className="font-black text-slate-400 block mb-1" style={{fontSize:8}}>시간대별 히트맵</span>
+                <span className="font-black text-slate-500 block mb-1" style={{fontSize:11}}>시간대별 히트맵</span>
                 <div className="flex-grow grid grid-cols-12 gap-1 content-center">
                   {stats.hourly.map((h,i)=>(
-                    <div key={i} title={`${i}시`} className={`rounded-md flex items-center justify-center font-black transition-all ${h>0?'bg-sky-400 text-white shadow-sm scale-105':'bg-slate-50 text-slate-200'}`} style={{fontSize:9,height:24}}>{h}</div>
+                    <div key={i} title={`${i}시`} className={`rounded-md flex items-center justify-center font-black transition-all ${h>0?'bg-sky-500 text-white shadow-sm scale-105':'bg-slate-50 text-slate-300'}`} style={{fontSize:11,height:28}}>{h}</div>
                   ))}
                 </div>
-                <div className="flex justify-between text-slate-300 mt-0.5 font-black px-1" style={{fontSize:7}}><span>0시</span><span>12시</span><span>23시</span></div>
+                <div className="flex justify-between text-slate-400 mt-0.5 font-black px-1" style={{fontSize:9}}><span>0시</span><span>12시</span><span>23시</span></div>
               </div>
               <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                <span className="font-black text-slate-400 block mb-1" style={{fontSize:8}}>일별 이용 추이</span>
+                <span className="font-black text-slate-500 block mb-1" style={{fontSize:11}}>일별 이용 추이</span>
                 <div className="flex-grow overflow-y-auto scrollbar-thin space-y-1">
                   {Object.entries(stats.daily).length>0 ? Object.entries(stats.daily).sort((a,b)=>new Date(b[0])-new Date(a[0])).map(([d,c])=>(
-                    <div key={d} className="flex justify-between border-b border-slate-50 py-0.5 font-bold items-center" style={{fontSize:9}}>
+                    <div key={d} className="flex justify-between border-b border-slate-50 py-0.5 font-bold items-center" style={{fontSize:11}}>
                       <span className="text-slate-600">{d}</span>
-                      <span className="text-blue-600 bg-blue-50 px-2 rounded-full flex items-center" style={{height:16}}>{c}명</span>
+                      <span className="text-sky-600 bg-sky-50 px-2 rounded-full flex items-center" style={{height:18}}>{c}명</span>
                     </div>
-                  )) : <div className="text-slate-300 italic text-center py-2" style={{fontSize:9}}>데이터 없음</div>}
+                  )) : <div className="text-slate-300 italic text-center py-2" style={{fontSize:11}}>데이터 없음</div>}
                 </div>
               </div>
             </div>
@@ -705,7 +634,7 @@ export default function App() {
     CATEGORIES.forEach(c=>{for(let i=0;i<parseInt(data.categoryCounts?.[c]||0);i++) cats.push(c);});
     const newLogs=[];
     for(let i=0;i<Math.min(genders.length,cats.length);i++){
-      newLogs.push({date:now.toLocaleDateString('ko-KR'),monthKey,time:now.getHours(),room:room.name,gender:genders[i],category:cats[i]||'일반',type:isWeekend?'주말':'주중'});
+      newLogs.push({date:now.toLocaleDateString('ko-KR'),monthKey,time:now.getHours(),room:room.name,name:data.name||'',gender:genders[i],category:cats[i]||'일반',type:isWeekend?'주말':'주중'});
     }
     setLogs(prev=>[...prev,...newLogs]);
   },[]);
@@ -833,7 +762,7 @@ export default function App() {
                 <Camera size={14}/><span className="font-bold" style={{fontSize:11}}>캡처</span>
               </button>
               <button onClick={()=>{setIsAdmin(false);showToast('관리자 모드 종료');}}
-                className="text-white border-sky-300 px-3 py-1 rounded-lg font-bold border flex items-center gap-1.5 shadow-sm" style={{fontSize:11,background:'#38bdf8'}}>
+                className="text-white border-sky-300 px-3 py-1 rounded-lg font-bold border flex items-center gap-1.5 shadow-sm" style={{fontSize:11,background:'#f87171'}}>
                 <LogOut size={12}/> 관리종료
               </button>
             </>
