@@ -167,7 +167,7 @@ function RoomCard({room, onClick, onEarlyCheckout, isAdmin}) {
   const displayName = (n) => isAdmin ? n : maskName(n);
 
   return (
-    <div className={`relative flex flex-col transition-all overflow-hidden rounded-lg border
+    <div className={`relative flex flex-col transition-all overflow-hidden rounded-lg border h-full
       ${isClosed ? 'bg-red-50 opacity-80 border-red-200' : 'bg-white shadow-sm border-slate-100 hover:border-blue-300'}`}>
       {/* 헤더 */}
       <div className={`p-1 px-1.5 ${isClosed?'bg-red-100':'bg-blue-50'} flex justify-between items-center`}>
@@ -175,7 +175,7 @@ function RoomCard({room, onClick, onEarlyCheckout, isAdmin}) {
         <div className={isClosed?'text-red-500':'text-blue-600'}>{isClosed ? <Settings size={12}/> : icon}</div>
       </div>
       {/* 바디 */}
-      <div className="p-1.5 flex-grow flex flex-col justify-between" style={{minHeight:75}}>
+      <div className="p-1.5 flex-grow flex flex-col justify-between" style={{minHeight:100}}>
         {isClosed ? (
           <div className="flex flex-col items-center justify-center h-full text-red-600 py-1">
             <Settings size={12} className="mb-0.5"/>
@@ -831,7 +831,7 @@ export default function App() {
           <AdminDashboard rooms={rooms} updateRoom={updateRoom} logs={logs} setLogs={setLogs}
             password={adminPw} setPassword={setAdminPw} showToast={showToast} setConfirmModal={setConfirmModal}/>
         ) : (
-          <div className="grid grid-cols-5 gap-1.5 overflow-y-auto pr-1 scrollbar-thin">
+          <div className="grid grid-cols-5 gap-1.5 pr-1 scrollbar-thin h-full" style={{gridTemplateRows:'repeat(3, 1fr)'}}>
             {DISPLAY_ORDER.map(id=>{const room=rooms.find(r=>r.id===id);if(!room)return null;return(
               <RoomCard key={room.id} room={room} isAdmin={isAdmin} onClick={()=>room.status==='open'&&setSelectedRoom(room)} onEarlyCheckout={handleEarlyCheckout}/>
             );})}
