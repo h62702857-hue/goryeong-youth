@@ -29,7 +29,7 @@ const GlobalCSS = () => (
 /* ═══════════════════════════════════════════════
    설정 및 상수
    ═══════════════════════════════════════════════ */
-const APP_VERSION = "v6-3";
+const APP_VERSION = "v6-3-1";
 
 const ROOM_DEFS = [
   { id:'dvd1',    name:'DVD1',   mixed:false, multi:false, waitable:true,  iconType:'tv' },
@@ -175,7 +175,7 @@ function RoomCard({room, onClick, onEarlyCheckout, isAdmin}) {
         <div className={isClosed?'text-red-500':'text-blue-600'}>{isClosed ? <Settings size={12}/> : icon}</div>
       </div>
       {/* 바디 */}
-      <div className="p-1.5 flex-grow flex flex-col justify-between" style={{minHeight:100}}>
+      <div className="p-1.5 flex-grow flex flex-col justify-between" style={{minHeight:115}}>
         {isClosed ? (
           <div className="flex flex-col items-center justify-center h-full text-red-600 py-1">
             <Settings size={12} className="mb-0.5"/>
@@ -216,10 +216,10 @@ function RoomCard({room, onClick, onEarlyCheckout, isAdmin}) {
       </div>
       {/* 하단 버튼 */}
       {!isClosed && !isOccupied && (
-        <div onClick={onClick} className="bg-blue-600 p-1 cursor-pointer text-center border-t font-black text-white hover:bg-blue-700 transition-colors rounded-b-lg" style={{fontSize:8}}>신청하기</div>
+        <div onClick={onClick} className="bg-blue-400 py-2 cursor-pointer text-center border-t font-black text-white hover:bg-blue-500 transition-colors rounded-b-lg" style={{fontSize:9}}>신청하기</div>
       )}
       {!isClosed && isOccupied && (room.multi || (room.waitable && room.waitlist.length < 2)) && (
-        <div onClick={onClick} className="bg-blue-50 p-1 cursor-pointer text-center border-t border-blue-100 font-black text-blue-600 hover:bg-blue-600 hover:text-white transition-colors rounded-b-lg" style={{fontSize:8}}>
+        <div onClick={onClick} className="bg-blue-50 py-2 cursor-pointer text-center border-t border-blue-100 font-black text-blue-500 hover:bg-blue-400 hover:text-white transition-colors rounded-b-lg" style={{fontSize:9}}>
           {room.multi ? '추가등록' : '대기등록'}
         </div>
       )}
