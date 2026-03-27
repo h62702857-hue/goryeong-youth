@@ -29,7 +29,7 @@ const GlobalCSS = () => (
 /* ═══════════════════════════════════════════════
    설정 및 상수
    ═══════════════════════════════════════════════ */
-const APP_VERSION = "v6-3-1";
+const APP_VERSION = "v6-3-2";
 
 const ROOM_DEFS = [
   { id:'dvd1',    name:'DVD1',   mixed:false, multi:false, waitable:true,  iconType:'tv' },
@@ -163,52 +163,52 @@ function RoomCard({room, onClick, onEarlyCheckout, isAdmin}) {
   const soonestExit = isOccupied
     ? [...room.occupants].sort((a,b)=>new Date(a.endTime)-new Date(b.endTime))[0].endTime
     : null;
-  const icon = ICON_MAP[room.iconType] || <Monitor size={12}/>;
+  const icon = ICON_MAP[room.iconType] || <Monitor size={14}/>;
   const displayName = (n) => isAdmin ? n : maskName(n);
 
   return (
-    <div className={`relative flex flex-col transition-all overflow-hidden rounded-lg border h-full
-      ${isClosed ? 'bg-red-50 opacity-80 border-red-200' : 'bg-white shadow-sm border-slate-100 hover:border-blue-300'}`}>
+    <div className={`relative flex flex-col transition-all overflow-hidden rounded-xl border-2 h-full
+      ${isClosed ? 'bg-red-50 opacity-80 border-red-200' : 'bg-white shadow-sm border-slate-200 hover:border-teal-400'}`}>
       {/* 헤더 */}
-      <div className={`p-1 px-1.5 ${isClosed?'bg-red-100':'bg-blue-50'} flex justify-between items-center`}>
-        <span className={`font-black text-xs ${isClosed?'text-red-900':'text-blue-950'} truncate max-w-[70%]`} style={{fontSize:10}}>{room.name}</span>
-        <div className={isClosed?'text-red-500':'text-blue-600'}>{isClosed ? <Settings size={12}/> : icon}</div>
+      <div className={`p-1.5 px-2 ${isClosed?'bg-red-100':'bg-slate-800'} flex justify-between items-center`}>
+        <span className={`font-black ${isClosed?'text-red-900':'text-teal-300'} truncate max-w-[70%]`} style={{fontSize:13}}>{room.name}</span>
+        <div className={isClosed?'text-red-400':'text-teal-400'}>{isClosed ? <Settings size={14}/> : icon}</div>
       </div>
       {/* 바디 */}
-      <div className="p-1.5 flex-grow flex flex-col justify-between" style={{minHeight:115}}>
+      <div className="p-2 flex-grow flex flex-col justify-between" style={{minHeight:115}}>
         {isClosed ? (
-          <div className="flex flex-col items-center justify-center h-full text-red-600 py-1">
-            <Settings size={12} className="mb-0.5"/>
-            <span className="text-center leading-tight whitespace-pre-wrap" style={{fontSize:8}}>{room.disabledReason||'수리 및 점검중'}</span>
+          <div className="flex flex-col items-center justify-center h-full text-red-500 py-1">
+            <Settings size={16} className="mb-1"/>
+            <span className="text-center leading-tight whitespace-pre-wrap font-bold" style={{fontSize:11}}>{room.disabledReason||'수리 및 점검중'}</span>
           </div>
         ) : (
           <div className="h-full flex flex-col justify-center">
             {isOccupied ? (
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <span className={`px-1 rounded font-black ${!room.multi?'bg-orange-100 text-orange-600 border border-orange-200':'bg-blue-100 text-blue-600 border border-blue-200'}`} style={{fontSize:7}}>
-                    {room.multi?'다팀':'사용'}
+                  <span className={`px-1.5 py-0.5 rounded font-black ${!room.multi?'bg-amber-100 text-amber-700 border border-amber-200':'bg-teal-50 text-teal-700 border border-teal-200'}`} style={{fontSize:10}}>
+                    {room.multi?'다팀이용':'사용중'}
                   </span>
-                  {!room.multi && <span className="text-slate-500 font-medium truncate" style={{fontSize:8,maxWidth:50}}>{displayName(room.occupants[0].name)}</span>}
+                  {!room.multi && <span className="text-slate-600 font-bold truncate" style={{fontSize:11,maxWidth:60}}>{displayName(room.occupants[0].name)}</span>}
                 </div>
-                <div className="py-1 bg-slate-50 rounded border border-slate-100 flex flex-col items-center justify-center text-blue-600 relative group">
-                  <span className="font-black" style={{fontSize:9}}>{formatHHMM(soonestExit)}</span>
+                <div className="py-1.5 bg-slate-50 rounded-lg border border-slate-200 flex flex-col items-center justify-center text-slate-800 relative group">
+                  <span className="font-black" style={{fontSize:13}}>{formatHHMM(soonestExit)}</span>
                   <button onClick={(e)=>{e.stopPropagation();onEarlyCheckout(room.id,0);}}
-                    className="absolute inset-0 bg-red-500 text-white font-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all rounded shadow-md cursor-pointer"
-                    style={{fontSize:8}}>퇴실하기</button>
+                    className="absolute inset-0 bg-red-500 text-white font-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all rounded-lg shadow-md cursor-pointer"
+                    style={{fontSize:11}}>퇴실하기</button>
                 </div>
                 {room.waitable && room.waitlist.length > 0 && (
-                  <div className="text-orange-600 font-black text-center" style={{fontSize:7}}>
+                  <div className="text-amber-600 font-black text-center" style={{fontSize:10}}>
                     대기 {room.waitlist.length}팀
                     {room.waitlist.map((w,i)=>(
-                      <div key={i} className="text-orange-500 font-bold truncate" style={{fontSize:7}}>{i+1}. {displayName(w.name)}</div>
+                      <div key={i} className="text-amber-500 font-bold truncate" style={{fontSize:10}}>{i+1}. {displayName(w.name)}</div>
                     ))}
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-center text-slate-300 font-medium py-1 flex flex-col items-center gap-0.5" style={{fontSize:8}}>
-                <Info size={10} className="text-slate-200"/>신청가능
+              <div className="text-center text-slate-300 font-bold py-2 flex flex-col items-center gap-1" style={{fontSize:12}}>
+                <Info size={16} className="text-teal-200"/>신청가능
               </div>
             )}
           </div>
@@ -216,10 +216,10 @@ function RoomCard({room, onClick, onEarlyCheckout, isAdmin}) {
       </div>
       {/* 하단 버튼 */}
       {!isClosed && !isOccupied && (
-        <div onClick={onClick} className="bg-blue-400 py-2 cursor-pointer text-center border-t font-black text-white hover:bg-blue-500 transition-colors rounded-b-lg" style={{fontSize:9}}>신청하기</div>
+        <div onClick={onClick} className="bg-teal-500 py-2.5 cursor-pointer text-center font-black text-white hover:bg-teal-600 transition-colors rounded-b-xl" style={{fontSize:12}}>신청하기</div>
       )}
       {!isClosed && isOccupied && (room.multi || (room.waitable && room.waitlist.length < 2)) && (
-        <div onClick={onClick} className="bg-blue-50 py-2 cursor-pointer text-center border-t border-blue-100 font-black text-blue-500 hover:bg-blue-400 hover:text-white transition-colors rounded-b-lg" style={{fontSize:9}}>
+        <div onClick={onClick} className="bg-teal-50 py-2.5 cursor-pointer text-center border-t border-teal-100 font-black text-teal-600 hover:bg-teal-500 hover:text-white transition-colors rounded-b-xl" style={{fontSize:12}}>
           {room.multi ? '추가등록' : '대기등록'}
         </div>
       )}
@@ -254,17 +254,17 @@ function RegistrationModal({room, onClose, onSubmit, showToast}) {
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-2 text-slate-700" style={{background:'rgba(0,0,0,.5)',backdropFilter:'blur(2px)'}}>
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden anim-zoom border border-blue-100">
-        <div className="bg-blue-600 p-2.5 text-white flex justify-between items-center">
-          <h3 className="font-black flex items-center gap-2" style={{fontSize:12}}>{icon} {room.name} 이용신청</h3>
-          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full"><X size={16}/></button>
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden anim-zoom border border-teal-200">
+        <div className="p-3 text-white flex justify-between items-center" style={{background:'#1e293b'}}>
+          <h3 className="font-black flex items-center gap-2" style={{fontSize:14}}>{icon} {room.name} 이용신청</h3>
+          <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full"><X size={18}/></button>
         </div>
-        <div className="p-3 space-y-3">
+        <div className="p-4 space-y-3">
           {/* AI 추천 */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-2 rounded-lg border border-blue-100 space-y-1.5">
+          <div className="bg-gradient-to-r from-teal-50 to-cyan-50 p-2.5 rounded-lg border border-teal-100 space-y-1.5">
             <div className="flex justify-between items-center">
-              <span className="font-black text-indigo-600 flex items-center gap-1" style={{fontSize:9}}><Sparkles size={10}/> AI 활동추천</span>
-              <button onClick={getAI} disabled={aiLoading} className="bg-indigo-600 text-white px-2 py-0.5 rounded-full font-bold shadow-sm" style={{fontSize:8}}>
+              <span className="font-black text-teal-700 flex items-center gap-1" style={{fontSize:11}}><Sparkles size={12}/> AI 활동추천</span>
+              <button onClick={getAI} disabled={aiLoading} className="text-white px-3 py-1 rounded-full font-bold shadow-sm" style={{fontSize:10,background:'#0f172a'}}>
                 {aiLoading ? <span className="anim-spin inline-block">⏳</span> : '추천받기'}
               </button>
             </div>
@@ -273,43 +273,43 @@ function RegistrationModal({room, onClose, onSubmit, showToast}) {
 
           {/* 이름 */}
           <div className="space-y-1">
-            <label className="block font-black text-slate-500 ml-1" style={{fontSize:10}}>대표자 / 팀명</label>
-            <input autoFocus placeholder="이름 입력" className="w-full p-2 bg-slate-50 border rounded text-xs outline-none focus:ring-2 focus:ring-blue-100 border-slate-200 font-bold"
-              value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/>
+            <label className="block font-black text-slate-600 ml-1" style={{fontSize:12}}>대표자 / 팀명</label>
+            <input autoFocus placeholder="이름 입력" className="w-full p-2.5 bg-slate-50 border-2 rounded-lg outline-none focus:ring-2 focus:ring-teal-200 border-slate-200 font-bold"
+              style={{fontSize:13}} value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/>
           </div>
 
           {/* 성별 */}
-          <div className="space-y-1">
-            <div className="flex justify-between items-center font-black text-slate-500" style={{fontSize:9}}>
-              <span>성별 인원</span><span className="text-blue-600">합계: {gT}</span>
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center font-black text-slate-600" style={{fontSize:12}}>
+              <span>성별 인원</span><span className="text-teal-600">합계: {gT}</span>
             </div>
-            {!room.mixed && <div className="bg-orange-50 text-orange-600 p-1.5 rounded text-center font-bold" style={{fontSize:9}}>⚠ 혼성 이용 불가 시설</div>}
+            {!room.mixed && <div className="bg-amber-50 text-amber-700 p-2 rounded-lg text-center font-bold" style={{fontSize:11}}>⚠ 혼성 이용 불가 시설</div>}
             <div className="grid grid-cols-2 gap-2">
-              <div className="flex items-center bg-blue-50 p-1 rounded-md border border-blue-100">
-                <span className="font-black text-blue-600 w-6 ml-1" style={{fontSize:9}}>남</span>
-                <input type="number" min="0" placeholder="0" className="bg-transparent w-full text-center text-xs font-black outline-none py-1"
-                  value={form.maleCount} onChange={e=>setForm({...form,maleCount:e.target.value})}/>
+              <div className="flex items-center bg-blue-50 p-1.5 rounded-lg border border-blue-200">
+                <span className="font-black text-blue-600 w-8 ml-1" style={{fontSize:12}}>남</span>
+                <input type="number" min="0" placeholder="0" className="bg-transparent w-full text-center font-black outline-none py-1"
+                  style={{fontSize:14}} value={form.maleCount} onChange={e=>setForm({...form,maleCount:e.target.value})}/>
               </div>
-              <div className="flex items-center bg-pink-50 p-1 rounded-md border border-pink-100">
-                <span className="font-black text-pink-600 w-6 ml-1" style={{fontSize:9}}>여</span>
-                <input type="number" min="0" placeholder="0" className="bg-transparent w-full text-center text-xs font-black outline-none py-1"
-                  value={form.femaleCount} onChange={e=>setForm({...form,femaleCount:e.target.value})}/>
+              <div className="flex items-center bg-pink-50 p-1.5 rounded-lg border border-pink-200">
+                <span className="font-black text-pink-600 w-8 ml-1" style={{fontSize:12}}>여</span>
+                <input type="number" min="0" placeholder="0" className="bg-transparent w-full text-center font-black outline-none py-1"
+                  style={{fontSize:14}} value={form.femaleCount} onChange={e=>setForm({...form,femaleCount:e.target.value})}/>
               </div>
             </div>
           </div>
 
           {/* 교급 */}
-          <div className="space-y-1">
-            <div className="flex justify-between items-center font-black text-slate-500" style={{fontSize:9}}>
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-center font-black text-slate-600" style={{fontSize:12}}>
               <span>교급별 인원</span>
               <span className={gT===cT && gT>0?'text-green-600':'text-red-500'}>합계: {cT}</span>
             </div>
             <div className="grid grid-cols-5 gap-1">
               {CATEGORIES.map(cat=>(
-                <div key={cat} className="bg-slate-50 p-1 rounded border border-slate-100 flex flex-col items-center hover:bg-slate-100 transition-colors">
-                  <span className="text-slate-400 font-black" style={{fontSize:8}}>{cat}</span>
-                  <input type="number" min="0" placeholder="0" className="w-full text-center text-xs font-black bg-transparent outline-none py-0.5"
-                    value={form.categoryCounts[cat]}
+                <div key={cat} className="bg-slate-50 p-1.5 rounded-lg border border-slate-200 flex flex-col items-center hover:bg-teal-50 transition-colors">
+                  <span className="text-slate-500 font-black" style={{fontSize:10}}>{cat}</span>
+                  <input type="number" min="0" placeholder="0" className="w-full text-center font-black bg-transparent outline-none py-0.5"
+                    style={{fontSize:14}} value={form.categoryCounts[cat]}
                     onChange={e=>setForm({...form,categoryCounts:{...form.categoryCounts,[cat]:e.target.value}})}/>
                 </div>
               ))}
@@ -317,7 +317,8 @@ function RegistrationModal({room, onClose, onSubmit, showToast}) {
           </div>
 
           <button disabled={!form.name||gT<=0||gT!==cT} onClick={()=>onSubmit(form)}
-            className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white rounded-lg font-black text-xs shadow-md transition-all active:scale-95">
+            className="w-full py-3 hover:opacity-90 disabled:bg-slate-300 text-white rounded-xl font-black shadow-md transition-all active:scale-95"
+            style={{fontSize:13,background:(!form.name||gT<=0||gT!==cT)?undefined:'#0f172a'}}>
             {gT<=0 ? '인원을 입력하세요' : gT!==cT ? '성별·교급 합계 불일치' : '신청 완료'}
           </button>
         </div>
@@ -384,13 +385,13 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md border border-blue-100 flex flex-col h-full overflow-hidden">
+    <div className="bg-white rounded-xl shadow-md border border-teal-100 flex flex-col h-full overflow-hidden">
       {/* 탭 */}
-      <div className="flex bg-slate-50 border-b overflow-x-auto shrink-0" style={{height:40}}>
-        {[{id:'status',label:'실시간 현황',icon:<Monitor size={12}/>},{id:'stats',label:'통계 분석',icon:<TrendingUp size={12}/>},{id:'settings',label:'설정',icon:<Settings size={12}/>}].map(t=>(
+      <div className="flex bg-slate-50 border-b overflow-x-auto shrink-0" style={{height:44}}>
+        {[{id:'status',label:'실시간 현황',icon:<Monitor size={14}/>},{id:'stats',label:'통계 분석',icon:<TrendingUp size={14}/>},{id:'settings',label:'설정',icon:<Settings size={14}/>}].map(t=>(
           <button key={t.id} onClick={()=>setTab(t.id)}
-            className={`px-4 py-1 font-black flex shrink-0 items-center gap-1.5 transition-all ${tab===t.id?'text-blue-600 border-b-2 border-blue-600 bg-white shadow-sm':'text-slate-400'}`}
-            style={{fontSize:10}}>{t.icon} {t.label}</button>
+            className={`px-5 py-1.5 font-black flex shrink-0 items-center gap-2 transition-all ${tab===t.id?'text-teal-700 border-b-2 border-teal-600 bg-white shadow-sm':'text-slate-400'}`}
+            style={{fontSize:12}}>{t.icon} {t.label}</button>
         ))}
       </div>
 
@@ -402,45 +403,45 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
               const totalNum = room.occupants.reduce((a,c)=>a+parseInt(c.maleCount||0)+parseInt(c.femaleCount||0),0);
               const icon = ICON_MAP[room.iconType] || <Monitor size={12}/>;
               return (
-                <div key={room.id} className={`p-1.5 rounded border flex flex-col gap-1 shadow-sm ${room.status==='closed'?'bg-red-50 border-red-100':'bg-slate-50 border-slate-100 hover:border-blue-300 transition-all'}`}>
-                  <div className="flex justify-between items-center border-b border-slate-200 pb-0.5 font-black">
-                    <span className={`truncate ${room.status==='closed'?'text-red-800':'text-blue-800'}`} style={{fontSize:9}}>{room.name}</span>
-                    <input type="checkbox" className="cursor-pointer" style={{transform:'scale(.75)'}}
+                <div key={room.id} className={`p-2 rounded-lg border-2 flex flex-col gap-1 shadow-sm ${room.status==='closed'?'bg-red-50 border-red-200':'bg-white border-slate-200 hover:border-teal-300 transition-all'}`}>
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-1 font-black">
+                    <span className={`truncate ${room.status==='closed'?'text-red-800':'text-slate-800'}`} style={{fontSize:12}}>{room.name}</span>
+                    <input type="checkbox" className="cursor-pointer" style={{transform:'scale(.85)'}}
                       checked={room.status==='open'} onChange={e=>updateRoom(room.id,{status:e.target.checked?'open':'closed'})}/>
                   </div>
                   <div className="flex-grow space-y-1" style={{minHeight:90}}>
                     {room.status==='closed'?(
                       <div className="p-1 space-y-1 anim-fade">
-                        <span className="font-black text-red-500 flex items-center gap-1" style={{fontSize:7}}><Settings size={8}/> 점검중</span>
-                        <textarea className="w-full p-1 bg-white border border-red-200 rounded outline-none resize-none shadow-inner font-bold" style={{fontSize:8,height:48}}
+                        <span className="font-black text-red-500 flex items-center gap-1" style={{fontSize:10}}><Settings size={10}/> 점검중</span>
+                        <textarea className="w-full p-1.5 bg-white border border-red-200 rounded-lg outline-none resize-none shadow-inner font-bold" style={{fontSize:11,height:48}}
                           placeholder="수리 사유 입력" value={room.disabledReason} onChange={e=>updateRoom(room.id,{disabledReason:e.target.value})}/>
                       </div>
                     ):(
                       <>
                         <div className="flex justify-between items-center mb-0.5">
-                          <span className="font-black text-blue-500" style={{fontSize:7}}>이용현황</span>
-                          <span className="bg-blue-600 text-white px-1 rounded font-black shadow-sm" style={{fontSize:8}}>{totalNum}</span>
+                          <span className="font-black text-teal-600" style={{fontSize:10}}>이용현황</span>
+                          <span className="text-white px-1.5 rounded font-black shadow-sm" style={{fontSize:10,background:'#1e293b'}}>{totalNum}</span>
                         </div>
                         {room.occupants.map((occ,idx)=>(
-                          <div key={idx} className="bg-white p-1 rounded border border-slate-100 flex justify-between shadow-sm anim-right" style={{fontSize:8}}>
+                          <div key={idx} className="bg-slate-50 p-1.5 rounded-lg border border-slate-200 flex justify-between shadow-sm anim-right" style={{fontSize:11}}>
                             <b>{occ.name}</b><span className="text-red-500 font-black">{formatHHMM(occ.endTime)}</span>
                           </div>
                         ))}
                         {room.waitable && room.waitlist.length>0 && (
-                          <div className="bg-orange-50 p-1.5 rounded border border-orange-200 mt-1 space-y-1.5 shadow-inner">
-                            <div className="flex justify-between items-center border-b border-orange-100 pb-0.5">
-                              <span className="font-black text-orange-600" style={{fontSize:7}}>대기목록</span>
-                              <span className="bg-orange-200 text-orange-800 px-1 rounded-full font-black" style={{fontSize:7}}>{room.waitlist.length}</span>
+                          <div className="bg-amber-50 p-1.5 rounded-lg border border-amber-200 mt-1 space-y-1.5 shadow-inner">
+                            <div className="flex justify-between items-center border-b border-amber-100 pb-0.5">
+                              <span className="font-black text-amber-700" style={{fontSize:10}}>대기목록</span>
+                              <span className="bg-amber-200 text-amber-800 px-1.5 rounded-full font-black" style={{fontSize:9}}>{room.waitlist.length}</span>
                             </div>
                             {room.waitlist.map((w,idx)=>(
-                              <div key={idx} className="border-b border-orange-100 last:border-0 py-0.5 space-y-0.5" style={{fontSize:7}}>
-                                <div className="font-black text-orange-900 flex justify-between items-center">
-                                  <span style={{fontSize:8}}>{w.name}</span>
-                                  <span className="text-orange-500 bg-white px-1 rounded border border-orange-50 font-black">D-{idx+1}</span>
+                              <div key={idx} className="border-b border-amber-100 last:border-0 py-0.5 space-y-0.5" style={{fontSize:10}}>
+                                <div className="font-black text-amber-900 flex justify-between items-center">
+                                  <span style={{fontSize:11}}>{w.name}</span>
+                                  <span className="text-amber-600 bg-white px-1.5 rounded border border-amber-100 font-black">D-{idx+1}</span>
                                 </div>
-                                <div className="text-slate-500 font-bold flex justify-between items-center">
+                                <div className="text-slate-600 font-bold flex justify-between items-center">
                                   <span>남{w.maleCount||0}/여{w.femaleCount||0}</span>
-                                  <span className="bg-orange-100 px-1 rounded text-orange-700" style={{fontSize:6}}>
+                                  <span className="bg-amber-100 px-1 rounded text-amber-700" style={{fontSize:9}}>
                                     {w.categoryCounts ? Object.entries(w.categoryCounts).filter(([,v])=>parseInt(v||0)>0).map(([k,v])=>`${k}${v}`).join(' ') : ''}
                                   </span>
                                 </div>
@@ -452,7 +453,7 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
                     )}
                   </div>
                   <button onClick={()=>setConfirmModal({title:'초기화',message:`${room.name} 정보를 초기화할까요?`,onConfirm:()=>{updateRoom(room.id,{occupants:[],waitlist:[]});setConfirmModal(null);showToast(`${room.name} 초기화됨`,'success');}})}
-                    className="py-1 bg-red-100 text-red-600 font-black rounded border border-red-200 mt-auto hover:bg-red-200 active:scale-95 transition-all" style={{fontSize:8}}>초기화</button>
+                    className="py-1.5 bg-red-100 text-red-600 font-black rounded-lg border border-red-200 mt-auto hover:bg-red-200 active:scale-95 transition-all" style={{fontSize:10}}>초기화</button>
                 </div>
               );
             })}
@@ -463,38 +464,38 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
         {tab==='stats' && (
           <div className="h-full flex flex-col gap-2 overflow-hidden">
             <div className="flex justify-between items-center px-1 shrink-0" style={{height:32}}>
-              <h2 className="font-black flex items-center gap-1.5 text-blue-900" style={{fontSize:11}}><BarChart3 size={14} className="text-blue-600"/> 통계 분석</h2>
+              <h2 className="font-black flex items-center gap-2 text-slate-800" style={{fontSize:14}}><BarChart3 size={16} className="text-teal-600"/> 통계 분석</h2>
               <div className="flex items-center gap-2">
-                <div className="flex items-center bg-white border border-blue-200 rounded-lg overflow-hidden shadow-sm">
-                  <button onClick={()=>changeMonth(-1)} className="px-2 py-1 hover:bg-blue-50 text-blue-600 font-black transition-colors" style={{fontSize:12}}>◀</button>
-                  <span className="px-3 py-1 font-black text-blue-700 border-x border-blue-100 bg-blue-50" style={{fontSize:10,minWidth:80,textAlign:'center'}}>{selMonthLabel}</span>
-                  <button onClick={()=>changeMonth(1)} className="px-2 py-1 hover:bg-blue-50 text-blue-600 font-black transition-colors" style={{fontSize:12}}>▶</button>
+                <div className="flex items-center bg-white border border-teal-200 rounded-lg overflow-hidden shadow-sm">
+                  <button onClick={()=>changeMonth(-1)} className="px-3 py-1.5 hover:bg-teal-50 text-slate-700 font-black transition-colors" style={{fontSize:14}}>◀</button>
+                  <span className="px-4 py-1.5 font-black text-slate-800 border-x border-teal-100 bg-teal-50" style={{fontSize:12,minWidth:90,textAlign:'center'}}>{selMonthLabel}</span>
+                  <button onClick={()=>changeMonth(1)} className="px-3 py-1.5 hover:bg-teal-50 text-slate-700 font-black transition-colors" style={{fontSize:14}}>▶</button>
                 </div>
-                <button onClick={downloadCSV} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded font-black flex items-center gap-1.5 transition-all shadow-md active:scale-95" style={{fontSize:9}}>
-                  <Download size={10}/> CSV
+                <button onClick={downloadCSV} className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded-lg font-black flex items-center gap-2 transition-all shadow-md active:scale-95" style={{fontSize:11}}>
+                  <Download size={12}/> CSV
                 </button>
               </div>
             </div>
 
             <div className="grid grid-cols-4 gap-2 shrink-0">
               {[
-                {label:'총 이용자',val:`${filtered.length}명`,color:'blue'},
+                {label:'총 이용자',val:`${filtered.length}명`,color:'teal'},
                 {label:'남 / 여',val:`${stats.gender.남} / ${stats.gender.여}`,color:'slate'},
                 {label:'주중 / 주말',val:`${stats.type.주중} / ${stats.type.주말}`,color:'slate'},
-                {label:'피크 시간',val:`${stats.hourly.indexOf(Math.max(...stats.hourly))}시`,color:'orange'},
+                {label:'피크 시간',val:`${stats.hourly.indexOf(Math.max(...stats.hourly))}시`,color:'amber'},
               ].map((c,i)=>(
-                <div key={i} className="bg-white p-2 rounded-xl border border-slate-100 shadow-sm flex flex-col items-center">
-                  <span className="font-black text-slate-400 mb-1" style={{fontSize:7}}>{c.label}</span>
-                  <span className={`font-black ${c.color==='blue'?'text-blue-600':c.color==='orange'?'text-orange-600':'text-slate-700'}`} style={{fontSize:c.color==='blue'?20:10}}>{c.val}</span>
+                <div key={i} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center">
+                  <span className="font-black text-slate-400 mb-1" style={{fontSize:10}}>{c.label}</span>
+                  <span className={`font-black ${c.color==='teal'?'text-teal-600':c.color==='amber'?'text-amber-600':'text-slate-700'}`} style={{fontSize:c.color==='teal'?24:13}}>{c.val}</span>
                 </div>
               ))}
             </div>
 
             {/* AI 리포트 */}
-            <div className="bg-indigo-600 p-2 px-3 rounded-xl text-white flex justify-between items-center shadow-lg shrink-0">
+            <div className="p-2.5 px-4 rounded-xl text-white flex justify-between items-center shadow-lg shrink-0" style={{background:'#1e293b'}}>
               <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-yellow-300"/>
-                <span className="font-black" style={{fontSize:10}}>AI 운영 리포트 ({selMonthLabel})</span>
+                <Sparkles size={16} className="text-teal-300"/>
+                <span className="font-black" style={{fontSize:12}}>AI 운영 리포트 ({selMonthLabel})</span>
                 {aiReport && <div className="ml-4 opacity-90 truncate border-l border-white/30 pl-4" style={{fontSize:9,maxWidth:400}}>{aiReport.slice(0,100)}...</div>}
               </div>
               <button onClick={genReport} disabled={aiLoading} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-full font-black border border-white/20 flex items-center gap-1.5 transition-all" style={{fontSize:9}}>
@@ -788,29 +789,29 @@ export default function App() {
   },[]);
 
   return (
-    <div className="min-h-screen bg-blue-50 text-slate-800 pb-2 overflow-hidden flex flex-col" style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif'}}>
+    <div className="min-h-screen text-slate-800 pb-2 overflow-hidden flex flex-col" style={{fontFamily:'-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif',background:'#f0fdfa'}}>
       <GlobalCSS/>
 
       {/* 헤더 */}
-      <header className="bg-blue-600 text-white p-2 px-4 shadow-sm flex justify-between items-center sticky top-0 z-40 shrink-0" style={{height:44}}>
+      <header className="text-white p-2 px-4 shadow-lg flex justify-between items-center sticky top-0 z-40 shrink-0" style={{height:52,background:'linear-gradient(135deg, #1e293b, #0f172a)'}}>
         <div className="flex items-center gap-3">
           <div onClick={handleLogoClick}
-            className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-blue-600 font-black cursor-pointer select-none shadow-inner"
-            style={{fontSize:14}} title="관리자 로그인 (5번 클릭)">GY</div>
+            className="w-10 h-10 rounded-xl flex items-center justify-center font-black cursor-pointer select-none shadow-lg"
+            style={{fontSize:16,background:'#2dd4bf',color:'#0f172a'}} title="관리자 로그인 (5번 클릭)">GY</div>
           <div>
-            <h1 className="text-sm font-bold leading-tight">고령군청소년문화의집</h1>
-            <p className="text-blue-200 font-semibold" style={{fontSize:8}}>{APP_VERSION} | 이용현황 시스템</p>
+            <h1 className="font-bold leading-tight" style={{fontSize:16}}>고령군청소년문화의집</h1>
+            <p className="font-semibold" style={{fontSize:10,color:'#5eead4'}}>{APP_VERSION} | 이용현황 시스템</p>
           </div>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1.5">
           {isAdmin && (
             <>
-              <button onClick={captureScreen} className="bg-blue-500 hover:bg-blue-400 p-1 px-2 rounded transition-colors flex items-center gap-1 border border-blue-400">
-                <Camera size={12}/><span className="font-bold" style={{fontSize:9}}>캡처</span>
+              <button onClick={captureScreen} className="hover:bg-slate-600 p-1.5 px-3 rounded-lg transition-colors flex items-center gap-1.5 border border-slate-600" style={{background:'#334155'}}>
+                <Camera size={14}/><span className="font-bold" style={{fontSize:11}}>캡처</span>
               </button>
               <button onClick={()=>{setIsAdmin(false);showToast('관리자 모드 종료');}}
-                className="bg-red-500 border-red-400 px-2 py-0.5 rounded font-bold border flex items-center gap-1" style={{fontSize:9}}>
-                <LogOut size={10}/> 관리종료
+                className="bg-red-500 border-red-400 px-3 py-1 rounded-lg font-bold border flex items-center gap-1.5" style={{fontSize:11}}>
+                <LogOut size={12}/> 관리종료
               </button>
             </>
           )}
@@ -819,8 +820,8 @@ export default function App() {
 
       {/* 토스트 */}
       {toast && (
-        <div className={`fixed top-14 left-1/2 z-50 px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1.5 anim-top
-          ${toast.type==='error'?'bg-red-500':'bg-green-600'} text-white font-bold`} style={{fontSize:10,transform:'translateX(-50%)'}}>
+        <div className={`fixed top-16 left-1/2 z-50 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 anim-top
+          ${toast.type==='error'?'bg-red-500':'bg-teal-600'} text-white font-bold`} style={{fontSize:12,transform:'translateX(-50%)'}}>
           {toast.type==='error'?'⚠':'✅'} {toast.text}
         </div>
       )}
@@ -845,12 +846,12 @@ export default function App() {
       {/* 확인 모달 */}
       {confirmModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4 text-slate-700" style={{background:'rgba(0,0,0,.5)',backdropFilter:'blur(2px)'}}>
-          <div className="bg-white rounded-xl shadow-2xl p-5 max-w-xs w-full anim-zoom border border-slate-100">
-            <h2 className="text-xs font-black mb-2 flex items-center gap-2 text-blue-600">⚠ {confirmModal.title}</h2>
-            <p className="text-slate-500 mb-5 leading-relaxed font-bold" style={{fontSize:11}}>{confirmModal.message}</p>
-            <div className="flex gap-1.5">
-              <button onClick={()=>setConfirmModal(null)} className="flex-1 py-1.5 bg-slate-100 rounded-lg font-black hover:bg-slate-200 transition-colors" style={{fontSize:10}}>취소</button>
-              <button onClick={confirmModal.onConfirm} className="flex-1 py-1.5 bg-blue-600 text-white rounded-lg font-black shadow-lg active:scale-95 transition-all" style={{fontSize:10}}>확인</button>
+          <div className="bg-white rounded-xl shadow-2xl p-5 max-w-xs w-full anim-zoom border border-slate-200">
+            <h2 className="font-black mb-2 flex items-center gap-2 text-slate-800" style={{fontSize:14}}>⚠ {confirmModal.title}</h2>
+            <p className="text-slate-500 mb-5 leading-relaxed font-bold" style={{fontSize:13}}>{confirmModal.message}</p>
+            <div className="flex gap-2">
+              <button onClick={()=>setConfirmModal(null)} className="flex-1 py-2 bg-slate-100 rounded-lg font-black hover:bg-slate-200 transition-colors" style={{fontSize:12}}>취소</button>
+              <button onClick={confirmModal.onConfirm} className="flex-1 py-2 text-white rounded-lg font-black shadow-lg active:scale-95 transition-all" style={{fontSize:12,background:'#0f172a'}}>확인</button>
             </div>
           </div>
         </div>
@@ -859,15 +860,15 @@ export default function App() {
       {/* 관리자 로그인 */}
       {showLogin && (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4 text-slate-700" style={{background:'rgba(0,0,0,.4)',backdropFilter:'blur(2px)'}}>
-          <div className="bg-white rounded-lg shadow-xl p-5 w-full border border-blue-100 anim-zoom" style={{maxWidth:240}}>
-            <h2 className="text-sm font-bold mb-3 flex items-center gap-1.5 text-blue-600">🔐 관리자 인증</h2>
-            <input type="password" autoFocus className="w-full p-2 border rounded-md mb-3 outline-none text-xs focus:ring-2 focus:ring-blue-100"
-              placeholder="비밀번호 입력" value={pwInput} onChange={e=>setPwInput(e.target.value)}
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full border border-teal-100 anim-zoom" style={{maxWidth:280}}>
+            <h2 className="font-bold mb-4 flex items-center gap-2 text-slate-800" style={{fontSize:15}}>🔐 관리자 인증</h2>
+            <input type="password" autoFocus className="w-full p-3 border-2 rounded-lg mb-4 outline-none focus:ring-2 focus:ring-teal-200 border-slate-200"
+              style={{fontSize:14}} placeholder="비밀번호 입력" value={pwInput} onChange={e=>setPwInput(e.target.value)}
               onKeyDown={e=>{if(e.key==='Enter'){if(pwInput===adminPw){setIsAdmin(true);setShowLogin(false);setPwInput('');}else showToast('비밀번호 불일치','error');}}}/>
-            <div className="flex gap-1">
-              <button onClick={()=>{setShowLogin(false);setPwInput('');}} className="flex-1 py-1.5 bg-slate-100 rounded font-bold" style={{fontSize:10}}>취소</button>
+            <div className="flex gap-2">
+              <button onClick={()=>{setShowLogin(false);setPwInput('');}} className="flex-1 py-2 bg-slate-100 rounded-lg font-bold" style={{fontSize:12}}>취소</button>
               <button onClick={()=>{if(pwInput===adminPw){setIsAdmin(true);setShowLogin(false);setPwInput('');}else showToast('비밀번호 불일치','error');}}
-                className="flex-1 py-1.5 bg-blue-600 text-white rounded font-bold transition-colors shadow-sm" style={{fontSize:10}}>확인</button>
+                className="flex-1 py-2 text-white rounded-lg font-bold transition-colors shadow-sm" style={{fontSize:12,background:'#0f172a'}}>확인</button>
             </div>
           </div>
         </div>
