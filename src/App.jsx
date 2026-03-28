@@ -559,6 +559,7 @@ export default function App() {
   const captureRef = useRef(null);
   const clickCnt = useRef(0);
   const clickTmr = useRef(null);
+  const dbReady = useRef(false);
 
   const showToast = useCallback((text,type='info')=>{
     setToast({text,type});
@@ -572,7 +573,7 @@ export default function App() {
     clickTmr.current=setTimeout(()=>{clickCnt.current=0;},2000);
   },[]);
 
-  /* ── IndexedDB: 로드 ── */
+  /* ── IndexedDB: 로드 (앱 시작 시 1회) ── */
   useEffect(()=>{
     (async()=>{
       try {
@@ -580,7 +581,6 @@ export default function App() {
         if(savedLogs.length) setLogs(savedLogs);
         const savedPw = await dbLoadSetting('adminPw');
         if(savedPw) setAdminPw(savedPw);
-        // rooms 복원 (이용자, 대기자, 상태)
         const savedRooms = await dbLoadSetting('rooms');
         if(savedRooms) {
           setRooms(prev => prev.map(room => {
@@ -590,21 +590,24 @@ export default function App() {
           }));
         }
       } catch(e){console.error('DB load error:',e);}
+      // 로드 완료 후에만 저장 허용
+      setTimeout(()=>{ dbReady.current = true; }, 1000);
     })();
   },[]);
 
-  /* ── IndexedDB: 저장 (logs 변경 시) ── */
+  /* ── IndexedDB: 저장 (로드 완료 후에만) ── */
   const logsSaveTimer = useRef(null);
   useEffect(()=>{
+    if(!dbReady.current) return;
     clearTimeout(logsSaveTimer.current);
     logsSaveTimer.current = setTimeout(()=>{
       dbSaveLogs(logs).catch(e=>console.error('DB save error:',e));
     }, 500);
   },[logs]);
 
-  /* ── IndexedDB: rooms 저장 (변경 시) ── */
   const roomsSaveTimer = useRef(null);
   useEffect(()=>{
+    if(!dbReady.current) return;
     clearTimeout(roomsSaveTimer.current);
     roomsSaveTimer.current = setTimeout(()=>{
       const toSave = rooms.map(r=>({id:r.id, occupants:r.occupants, waitlist:r.waitlist, status:r.status, disabledReason:r.disabledReason}));
