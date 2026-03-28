@@ -549,6 +549,14 @@ export default function App() {
     saveData(STORAGE_KEYS.rooms, toSave);
   },[rooms]);
 
+  /* ── 뒤로가기 버튼 방지 (앱 종료 차단) ── */
+  useEffect(()=>{
+    const preventBack = () => { window.history.pushState(null, '', window.location.href); };
+    window.history.pushState(null, '', window.location.href);
+    window.addEventListener('popstate', preventBack);
+    return () => window.removeEventListener('popstate', preventBack);
+  },[]);
+
   /* ── 자동 퇴실 & 승계 (10초) ── */
   const promoteWaitlist = useCallback((room, curOcc)=>{
     if(!room.waitlist.length) return {...room,occupants:curOcc};
