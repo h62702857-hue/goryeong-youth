@@ -79,56 +79,16 @@ const maskName = (n) => {
 const uid = () => Math.random().toString(36).substr(2,9);
 
 /* ═══════════════════════════════════════════════
-   IndexedDB 로컬 저장 (태블릿 한 대 전용)
+   로컬 저장 (localStorage - 간단하고 안정적)
    ═══════════════════════════════════════════════ */
-const DB_NAME = 'YouthCenterDB';
-const DB_VER = 1;
+const STORAGE_KEYS = { logs:'YC_LOGS', rooms:'YC_ROOMS', pw:'YC_PW' };
 
-function openDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VER);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains('logs')) db.createObjectStore('logs',{keyPath:'id',autoIncrement:true});
-      if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings',{keyPath:'key'});
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
+function saveData(key, data) {
+  try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) { console.error('저장 실패:', e); }
 }
 
-async function dbSaveLogs(logs) {
-  const db = await openDB();
-  const tx = db.transaction('logs','readwrite');
-  const store = tx.objectStore('logs');
-  store.clear();
-  logs.forEach(l => store.add({...l, id: undefined}));
-}
-
-async function dbLoadLogs() {
-  const db = await openDB();
-  return new Promise((resolve) => {
-    const tx = db.transaction('logs','readonly');
-    const req = tx.objectStore('logs').getAll();
-    req.onsuccess = () => resolve(req.result || []);
-    req.onerror = () => resolve([]);
-  });
-}
-
-async function dbSaveSetting(key, value) {
-  const db = await openDB();
-  const tx = db.transaction('settings','readwrite');
-  tx.objectStore('settings').put({key, value});
-}
-
-async function dbLoadSetting(key) {
-  const db = await openDB();
-  return new Promise((resolve) => {
-    const tx = db.transaction('settings','readonly');
-    const req = tx.objectStore('settings').get(key);
-    req.onsuccess = () => resolve(req.result?.value ?? null);
-    req.onerror = () => resolve(null);
-  });
+function loadData(key, fallback) {
+  try { const d = localStorage.getItem(key); return d ? JSON.parse(d) : fallback; } catch(e) { return fallback; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -526,7 +486,7 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
                   value={newPw} onChange={e=>setNewPw(e.target.value)}/>
               </div>
               <button onClick={()=>{
-                if(curPw===password){setPassword(newPw);dbSaveSetting('adminPw',newPw);showToast('비밀번호 변경 완료','success');setCurPw('');setNewPw('');}
+                if(curPw===password){setPassword(newPw);saveData(STORAGE_KEYS.pw,newPw);showToast('비밀번호 변경 완료','success');setCurPw('');setNewPw('');}
                 else showToast('비밀번호 불일치','error');
               }} className="w-full py-3 bg-sky-400 text-white rounded-lg font-black text-xs shadow-xl active:scale-95 transition-all">변경하기</button>
             </div>
@@ -546,10 +506,20 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
    메인 앱
    ═══════════════════════════════════════════════ */
 export default function App() {
-  const [rooms, setRooms] = useState(ROOM_DEFS.map(r=>({...r,status:'open',disabledReason:'',occupants:[],waitlist:[]})));
-  const [logs, setLogs] = useState([]);
+  // localStorage에서 직접 초기값 로드 (동기 = 충돌 없음)
+  const [rooms, setRooms] = useState(()=>{
+    const saved = loadData(STORAGE_KEYS.rooms, null);
+    const base = ROOM_DEFS.map(r=>({...r,status:'open',disabledReason:'',occupants:[],waitlist:[]}));
+    if(!saved) return base;
+    return base.map(room=>{
+      const s = saved.find(r=>r.id===room.id);
+      if(s) return {...room, occupants:s.occupants||[], waitlist:s.waitlist||[], status:s.status||'open', disabledReason:s.disabledReason||''};
+      return room;
+    });
+  });
+  const [logs, setLogs] = useState(()=>loadData(STORAGE_KEYS.logs, []));
   const [isAdmin, setIsAdmin] = useState(false);
-  const [adminPw, setAdminPw] = useState('1234');
+  const [adminPw, setAdminPw] = useState(()=>loadData(STORAGE_KEYS.pw, '1234'));
   const [showLogin, setShowLogin] = useState(false);
   const [pwInput, setPwInput] = useState('');
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -559,7 +529,6 @@ export default function App() {
   const captureRef = useRef(null);
   const clickCnt = useRef(0);
   const clickTmr = useRef(null);
-  const dbReady = useRef(false);
 
   const showToast = useCallback((text,type='info')=>{
     setToast({text,type});
@@ -573,46 +542,11 @@ export default function App() {
     clickTmr.current=setTimeout(()=>{clickCnt.current=0;},2000);
   },[]);
 
-  /* ── IndexedDB: 로드 (앱 시작 시 1회) ── */
+  /* ── 자동 저장 (상태 변경 시) ── */
+  useEffect(()=>{ saveData(STORAGE_KEYS.logs, logs); },[logs]);
   useEffect(()=>{
-    (async()=>{
-      try {
-        const savedLogs = await dbLoadLogs();
-        if(savedLogs.length) setLogs(savedLogs);
-        const savedPw = await dbLoadSetting('adminPw');
-        if(savedPw) setAdminPw(savedPw);
-        const savedRooms = await dbLoadSetting('rooms');
-        if(savedRooms) {
-          setRooms(prev => prev.map(room => {
-            const saved = savedRooms.find(r => r.id === room.id);
-            if(saved) return { ...room, occupants: saved.occupants||[], waitlist: saved.waitlist||[], status: saved.status||'open', disabledReason: saved.disabledReason||'' };
-            return room;
-          }));
-        }
-      } catch(e){console.error('DB load error:',e);}
-      // 로드 완료 후에만 저장 허용
-      setTimeout(()=>{ dbReady.current = true; }, 1000);
-    })();
-  },[]);
-
-  /* ── IndexedDB: 저장 (로드 완료 후에만) ── */
-  const logsSaveTimer = useRef(null);
-  useEffect(()=>{
-    if(!dbReady.current) return;
-    clearTimeout(logsSaveTimer.current);
-    logsSaveTimer.current = setTimeout(()=>{
-      dbSaveLogs(logs).catch(e=>console.error('DB save error:',e));
-    }, 500);
-  },[logs]);
-
-  const roomsSaveTimer = useRef(null);
-  useEffect(()=>{
-    if(!dbReady.current) return;
-    clearTimeout(roomsSaveTimer.current);
-    roomsSaveTimer.current = setTimeout(()=>{
-      const toSave = rooms.map(r=>({id:r.id, occupants:r.occupants, waitlist:r.waitlist, status:r.status, disabledReason:r.disabledReason}));
-      dbSaveSetting('rooms', toSave).catch(e=>console.error('DB rooms save error:',e));
-    }, 500);
+    const toSave = rooms.map(r=>({id:r.id, occupants:r.occupants, waitlist:r.waitlist, status:r.status, disabledReason:r.disabledReason}));
+    saveData(STORAGE_KEYS.rooms, toSave);
   },[rooms]);
 
   /* ── 자동 퇴실 & 승계 (10초) ── */
