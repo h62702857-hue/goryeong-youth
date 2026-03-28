@@ -307,7 +307,9 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
     const s = {daily:{},hourly:Array(24).fill(0),gender:{남:0,여:0},type:{주중:0,주말:0},roomDetails:{}};
     ROOM_DEFS.forEach(r=>s.roomDetails[r.name]={total:0,male:0,female:0,weekday:0,weekend:0,cats:{'초등':0,'중등':0,'고등':0,'대학':0,'일반':0}});
     filtered.forEach(l=>{
-      s.daily[l.date]=(s.daily[l.date]||0)+1; s.hourly[l.time]++; s.gender[l.gender]++; s.type[l.type]++;
+      if(!s.daily[l.date]) s.daily[l.date]={total:0,남:0,여:0,초등:0,중등:0,고등:0,대학:0,일반:0};
+      const dd=s.daily[l.date]; dd.total++; dd[l.gender]++; dd[l.category]++;
+      s.hourly[l.time]++; s.gender[l.gender]++; s.type[l.type]++;
       if(s.roomDetails[l.room]){const rd=s.roomDetails[l.room];rd.total++;if(l.gender==='남')rd.male++;else rd.female++;if(l.type==='주중')rd.weekday++;else rd.weekend++;rd.cats[l.category]++;}
     });
     return s;
@@ -466,23 +468,37 @@ function AdminDashboard({rooms, updateRoom, logs, setLogs, password, setPassword
             </div>
 
             {/* 시간대 히트맵 + 일별 */}
-            <div className="grid grid-cols-2 gap-2 shrink-0 pb-1" style={{height:120}}>
+            <div className="grid grid-cols-2 gap-2 shrink-0 pb-1" style={{height:160}}>
               <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-                <span className="font-black text-slate-500 block mb-1" style={{fontSize:11}}>시간대별 히트맵</span>
-                <div className="flex-grow grid grid-cols-12 gap-1 content-center">
-                  {stats.hourly.map((h,i)=>(
-                    <div key={i} title={`${i}시`} className={`rounded-md flex items-center justify-center font-black transition-all ${h>0?'bg-sky-500 text-white shadow-sm scale-105':'bg-slate-50 text-slate-300'}`} style={{fontSize:11,height:28}}>{h}</div>
+                <span className="font-black text-slate-500 block mb-1.5" style={{fontSize:11}}>시간대별 이용현황</span>
+                <div className="flex-grow grid gap-1 content-center" style={{gridTemplateColumns:'repeat(9, 1fr)'}}>
+                  {stats.hourly.slice(10,19).map((h,i)=>(
+                    <div key={i} className="flex flex-col items-center gap-0.5">
+                      <div className={`w-full rounded-md flex items-center justify-center font-black transition-all ${h>0?'bg-sky-500 text-white shadow-sm':'bg-slate-100 text-slate-300'}`} style={{fontSize:13,height:34}}>{h}</div>
+                      <span className="text-slate-500 font-bold" style={{fontSize:10}}>{i+10}시</span>
+                    </div>
                   ))}
                 </div>
-                <div className="flex justify-between text-slate-400 mt-0.5 font-black px-1" style={{fontSize:9}}><span>0시</span><span>12시</span><span>23시</span></div>
               </div>
               <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex flex-col">
                 <span className="font-black text-slate-500 block mb-1" style={{fontSize:11}}>일별 이용 추이</span>
                 <div className="flex-grow overflow-y-auto scrollbar-thin space-y-1">
                   {Object.entries(stats.daily).length>0 ? Object.entries(stats.daily).sort((a,b)=>new Date(b[0])-new Date(a[0])).map(([d,c])=>(
-                    <div key={d} className="flex justify-between border-b border-slate-50 py-0.5 font-bold items-center" style={{fontSize:11}}>
-                      <span className="text-slate-600">{d}</span>
-                      <span className="text-sky-600 bg-sky-50 px-2 rounded-full flex items-center" style={{height:18}}>{c}명</span>
+                    <div key={d} className="border-b border-slate-100 py-1" style={{fontSize:10}}>
+                      <div className="flex justify-between items-center font-bold mb-0.5">
+                        <span className="text-slate-700" style={{fontSize:11}}>{d}</span>
+                        <span className="text-sky-600 bg-sky-50 px-2 rounded-full font-black" style={{fontSize:11}}>{c.total}명</span>
+                      </div>
+                      <div className="flex gap-2 text-slate-500">
+                        <span>남<b className="text-blue-600">{c.남}</b></span>
+                        <span>여<b className="text-pink-500">{c.여}</b></span>
+                        <span className="text-slate-300">|</span>
+                        <span>초<b>{c.초등}</b></span>
+                        <span>중<b>{c.중등}</b></span>
+                        <span>고<b>{c.고등}</b></span>
+                        <span>대<b>{c.대학}</b></span>
+                        <span>일<b>{c.일반}</b></span>
+                      </div>
                     </div>
                   )) : <div className="text-slate-300 italic text-center py-2" style={{fontSize:11}}>데이터 없음</div>}
                 </div>
